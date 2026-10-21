@@ -6,16 +6,16 @@
 
 :root {
   /* Couleurs */
-  --color-bg: #F6F1E7;
-  --color-bg-alt: #EDE4D0;
-  --color-green: #24463B;
-  --color-green-dark: #152E26;
-  --color-ochre: #B9781E;
-  --color-ochre-soft: #E7C393;
-  --color-text: #2A2620;
-  --color-text-soft: #5B564B;
-  --color-border: #DACBA3;
-  --color-cream: #FCFAF4;
+  --color-bg: #F6F1E7; /* Un blanc crème très clair et lumineux. Idéal pour le fond principal afin d'apporter de la douceur par rapport à un blanc pur. */
+  --color-bg-alt: #EDE4D0; /* Un beige/crème très doux et légèrement teinté. Parfait pour de grandes surfaces de fond chaleureuses */
+  --color-green: #24463B; /* Un beige un peu plus soutenu et sablonneux. Utile pour créer un contraste léger avec le fond (comme des cartes ou des sections) */
+  --color-green-dark: #152E26; /* Un beige doré atténué. Conçu spécifiquement pour des lignes de séparation subtiles et élégantes */
+  --color-ochre: #B9781E; /* Un ocre doux, proche d'une teinte sable doré ou pêche cuivrée. Excellent pour des fonds d'alertes ou des éléments secondaires mis en avant */
+  --color-ochre-soft: #E7C393; /* Un ocre jaune ou terre de Sienne chaud et vibrant. Parfait pour les éléments d'accentuation (boutons, liens importants) */
+  --color-text: #2A2620; /* Un gris-brun chaud (taupe). Idéal pour le texte secondaire, les légendes ou les éléments moins importants */
+  --color-text-soft: #5B564B; /* Un marron très foncé, presque noir, mais beaucoup plus doux visuellement. C'est votre couleur principale pour une lecture confortable du texte */
+  --color-border: #DACBA3; /* Un vert sapin profond et élégant. Donne une ambiance naturelle, organique ou haut de gamme */
+  --color-cream: #FCFAF4; /* Un vert forêt extrêmement sombre. Idéal pour un très fort contraste (pieds de page, titres majeurs) */
 
   /* Typo */
   --font-display: 'Lora', Georgia, serif;
