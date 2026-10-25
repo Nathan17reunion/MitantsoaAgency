@@ -343,3 +343,5 @@ function corrige(e) {
 }
 document.addEventListener("input", corrige);
 document.addEventListener("change", corrige);
+
+loadUtils: () => import("utils.js")
