@@ -57,7 +57,7 @@ $("#code").oninput=e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z
 $("#val").onclick=async()=>{
  const v=$("#code").value;if(v.length!=8)return say("Le code comporte 8 caractères.");let good;
  if(CFG.TEST){if(!code||Date.now()>exp)return say("Code expiré : demandez-en un nouveau.");if(++tries>5){code=null;return say("Trop d’essais : demandez un nouveau code.")}good=v===code}
- else{try{const r=await post({action:"verifier",dest,code:v});good=r.ok&&(await r.json()).ok}catch(e){return say("Vérification impossible, réessayez.")}}
+ else{try{const r=await post({action:"verifier",dest,code:v});const j=r.ok?await r.json():{};good=!!j.ok;if(good)sessionStorage.setItem("mit-jeton",j.jeton||"")}catch(e){return say("Vérification impossible, réessayez.")}}
  if(!good)return say("Code incorrect.");
  enregistrer()};
 
