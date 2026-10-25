@@ -50,7 +50,7 @@ $("#send").onclick=async()=>{
  const canal=F.canal.value;dest=canal=="sms"?F.tel.value:F.email.value;
  if(!dest)return say("Coordonnée manquante : revenez à l’étape 1.");
  if(CFG.TEST){code=gen();exp=Date.now()+(15 * 60 * 1000);tries=0;$("#test").hidden=false;$("#test b").textContent=code}
- else{try{const r=await post({action:"envoyer",canal,dest});if(!r.ok)throw new Error("le serveur répond "+r.status)}catch(e){return say("Envoi impossible ("+(e.message&&e.message!="Failed to fetch"?e.message:"serveur injoignable ou bloqué par le navigateur")+").")}}
+  else{try{const r=await post({action:"envoyer",canal,dest});if(!r.ok)throw new Error("le serveur répond "+r.status);const j=await r.json().catch(()=>({}));if(j.code){$("#test").hidden=false;$("#test b").textContent=j.code}}catch(e){return say("Envoi impossible ("+(e.message||"serveur injoignable")+").")}}
  $("#codebox").hidden=false;$("#code").focus();cooldown();
  say(`Code envoyé ${canal=="sms"?"par SMS au ":"par e-mail à "}${mask(dest)}. Valable 10 minutes.`,true)};
 $("#code").oninput=e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"");
