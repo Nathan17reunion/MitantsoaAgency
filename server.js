@@ -43,13 +43,13 @@ app.post("/envoi",lim(15),async(req,res)=>{
    else if(canal==="email")await mail(dest,"Votre code de confirmation",`Votre code Agence Mitantsoa : ${code} (valable 15 minutes).`);
    else await sms(k,`Agence Mitantsoa : votre code de confirmation est ${code} (valable 15 min).`);
   }catch(e){console.error("Envoi du code :",e.message);return res.status(502).json({ok:false})}
-  return res.json({ok:true});
+  return res.json(MODE_TEST==="true"?{ok:true,code}:{ok:true});
  }
  if(action==="verifier"){
   const o=otps.get(k),c=String(req.body.code||"").toUpperCase();
   if(!o||Date.now()>o.exp||++o.tries>5){otps.delete(k);return res.json({ok:false})}
   if(sha(c)!==o.hash)return res.json({ok:false});
-  otps.delete(k);verified.set(k,Date.now());return res.json({ok:true});
+  otps.delete(k);verified.set(k,Date.now());return res.json(MODE_TEST==="true"?{ok:true,code}:{ok:true});
  }
  res.status(400).json({ok:false});
 });
