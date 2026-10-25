@@ -81,9 +81,12 @@ document.querySelector("#btn-send").onclick=async()=>{
  fd.append("lettre",new Blob([`<!doctype html><meta charset="utf-8"><style>${css}</style>${lettre}`],{type:"text/html"}),`${ref}_02_Lettre-demande.html`);
  SL.filter(s=>s.file).forEach(s=>fd.append("pieces",s.file,s.name));
  if(typeof CFG!=="undefined"&&CFG.DOSSIER){
-  try{const r=await fetch(CFG.DOSSIER,{method:"POST",body:fd});
+   try{const r=await fetch(CFG.DOSSIER,{method:"POST",body:fd});
    if(r.status==409){const j=await r.json();return msg(`Une demande existe déjà avec votre e-mail pour cette aide (n° ${j.ref}). Suivez votre demande : un e-mail vous a été envoyé.`)}
-   if(!r.ok)throw 0;location.href="envoye.html"}catch(e){msg("Envoi impossible pour le moment. Réessayez ou utilisez Imprimer / Télécharger.")}
+   if(r.ok){location.href="envoye.html";return}
+   const M={400:"un fichier est refusé (format, contenu ou taille)",403:"votre e-mail n’est plus vérifié : refaites la demande depuis le début",413:"fichiers trop lourds",429:"trop de tentatives, patientez quelques minutes",500:"erreur du serveur",502:"serveur indisponible, réessayez dans une minute",503:"serveur en démarrage, réessayez dans une minute",504:"le serveur met trop de temps, réessayez"};
+   msg("Envoi impossible ("+r.status+") : "+(M[r.status]||"erreur inattendue")+".")
+  }catch(e){msg("Envoi impossible : le serveur est injoignable (connexion, mise en veille de Render ou blocage du navigateur). Réessayez dans une minute.")}
  }else{
   SL.filter(s=>s.file).forEach(s=>dl(s.file,s.name));
   msg("Envoi automatique non configuré : vos pièces ont été téléchargées avec leur nom officiel. Joignez-les, avec le PDF imprimé (fiche et lettre), à l’e-mail qui s’ouvre.",1);
