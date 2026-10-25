@@ -169,3 +169,13 @@ app.get("/",(q,r)=>r.send("Serveur Agence Mitantsoa : en ligne"));
 app.listen(PORT,HOST,()=>console.log(`Serveur Mitantsoa sur http://${HOST}:${PORT} (MODE_TEST=${MODE_TEST})`));
 
 app.use(express.static("D:/MitantsoaAgency/fiche-mitantsoa/fiche-mitantsoa"));
+
+const app=express();app.set("trust proxy",1);
+app.use(helmet({
+ contentSecurityPolicy:{
+  directives:{
+   ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+   "connect-src":["'self'","https://data.geopf.fr"]
+  }
+ }
+}));
