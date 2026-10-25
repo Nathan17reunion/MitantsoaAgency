@@ -22,7 +22,20 @@ const phone=s=>{s=String(s).replace(/[\s.\-()]/g,"");if(s.startsWith("+"))return
  if(/^0(692|693)/.test(s))return"262"+s.slice(1);if(s.startsWith("0"))return"33"+s.slice(1);return s};
 const norm=d=>String(d).includes("@")?String(d).trim().toLowerCase():phone(d);
 const tr=SMTP_HOST?nodemailer.createTransport({host:SMTP_HOST,port:+SMTP_PORT,secure:+SMTP_PORT==465,auth:{user:SMTP_USER,pass:SMTP_PASS}}):null;
-const mail=(to,subject,text)=>{if(!tr)throw new Error("SMTP non configuré");return tr.sendMail({from:MAIL_FROM||SMTP_USER,to,subject,text})};
+const MAIL_FROM_EMAIL=process.env.MAIL_FROM_EMAIL,BREVO_URL=process.env.BREVO_URL||"https://api.brevo.com/v3/smtp/email";
+const mail=async(to,subject,text,attachments)=>{
+ const att=(attachments||[]).map(a=>({name:a.filename,content:(a.content?Buffer.from(a.content):fs.readFileSync(a.path)).toString("base64")}));
+ if(BREVO_API_KEY){
+  const body={sender:{name:"Agence Mitantsoa",email:MAIL_FROM_EMAIL},to:[{email:to}],subject,textContent:text};
+  if(att.length)body.attachment=att;
+  const r=await fetch(BREVO_URL,{method:"POST",headers:{"api-key":BREVO_API_KEY,"content-type":"application/json",accept:"application/json"},body:JSON.stringify(body)});
+  if(!r.ok)throw new Error("Brevo e-mail HTTP "+r.status+" "+(await r.text()).slice(0,200));
+  return;
+ }
+ if(!tr)throw new Error("Aucun envoi d'e-mail configuré");
+ return tr.sendMail({from:MAIL_FROM||SMTP_USER,to,subject,text,attachments});
+};
+
 if(tr)tr.verify().then(()=>console.log("SMTP : connexion OK")).catch(e=>console.log("SMTP : ERREUR",e.message));else console.log("SMTP : non configuré (aucun e-mail ne sera envoyé)");
 const sms=async(num,content)=>{if(!BREVO_API_KEY)throw new Error("SMS non configuré");
  const r=await fetch("https://api.brevo.com/v3/transactionalSMS/sms",{method:"POST",headers:{"api-key":BREVO_API_KEY,"content-type":"application/json"},
@@ -89,6 +102,41 @@ const ajouter=(d,statut)=>{const r=d.demande||{},l=r.lt||{};
  }
 }
 }
+
+/* --- PDF en mémoire, Excel d'une demande, envoi par lots (sans stocker les fichiers) --- */
+async function htmlToPdfBuffer(html){
+ if(!puppeteer)throw new Error("puppeteer non installé");
+ const p=await (await navigateur()).newPage();
+ try{
+  await p.setJavaScriptEnabled(false);
+  await p.setRequestInterception(true);
+  p.on("request",r=>/^(data:|about:)/.test(r.url())?r.continue():r.abort());
+  await p.setContent(html,{waitUntil:"load",timeout:20000});
+  return Buffer.from(await p.pdf({format:"A4",printBackground:true,preferCSSPageSize:true,margin:{top:0,right:0,bottom:0,left:0}}));
+ }finally{await p.close()}
+}
+async function excelUneDemande(d){
+ const r=d.demande||{},l=r.lt||{},t=new Date();
+ const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Demande");
+ ws.columns=[{header:"Numéro de demande",key:"ref",width:24},{header:"Date",key:"d",width:12},{header:"Heure",key:"h",width:8},{header:"Nom",key:"nom",width:20},{header:"Prénom",key:"prenom",width:18},
+  {header:"Date de naissance",key:"nai",width:14},{header:"Téléphone",key:"tel",width:15},{header:"E-mail",key:"email",width:28},{header:"Adresse",key:"adresse",width:34},
+  {header:"Pôle",key:"pole",width:28},{header:"Aide demandée",key:"aide",width:24},{header:"Motif",key:"motif",width:40},{header:"Situation",key:"situation",width:30}];
+ ws.addRow({ref:d.reference,d:t.toLocaleDateString("fr-FR"),h:t.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),nom:d.nom,prenom:d.prenom,nai:(d.naissance||"").split("-").reverse().join("/"),
+  tel:d.tel,email:d.email,adresse:d.adresse,pole:r.pole,aide:r.aide,motif:d.motif,situation:(l.sit||[]).join(", ")});
+ const b={style:"thin",color:{argb:"FF999999"}};
+ ws.eachRow(x=>x.eachCell(c=>{c.border={top:b,left:b,bottom:b,right:b};c.alignment={vertical:"top",wrapText:true}}));
+ const h=ws.getRow(1);h.height=28;
+ h.eachCell(c=>{c.font={bold:true,color:{argb:"FFFFFFFF"},size:12};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF24463B"}};c.alignment={vertical:"middle",horizontal:"center",wrapText:true}});
+ ws.views=[{state:"frozen",ySplit:1}];
+ return Buffer.from(await wb.xlsx.writeBuffer());
+}
+async function envoyerParLots(to,sujet,texte,fichiers){      // plusieurs e-mails si le total dépasse ~9 Mo
+ const MAX=9*1048576,lots=[{f:[],t:0}];
+ for(const f of fichiers){let c=lots[lots.length-1];if(c.f.length&&c.t+f.content.length>MAX){c={f:[],t:0};lots.push(c)}c.f.push(f);c.t+=f.content.length}
+ for(let i=0;i<lots.length;i++)await mail(to,lots.length>1?`${sujet} (${i+1}/${lots.length})`:sujet,texte,lots[i].f);
+ return lots.length;
+}
+
 /* ---------- 3. Dossier complet (fiche, lettre, pièces) ---------- */
 const up=multer({storage:multer.memoryStorage(),limits:{fileSize:10*1048576,files:25}});
 const NOM=/^(DEM-\d{8}-[A-Z0-9]{4})_\d{2}(?:-\d{2})?_[A-Za-z0-9-]{1,40}\.(pdf|png|jpg|html)$/;
@@ -98,23 +146,35 @@ app.post("/dossier",lim(30),up.fields([{name:"fiche",maxCount:1},{name:"lettre",
  try{
   const ref=req.body.reference,d=JSON.parse(req.body.donnees||"{}");
   if(!REF.test(ref||"")||d.reference!==ref||!isVerified(d))return res.status(403).json({ok:false});
+  if(refuserDoublon(d,res))return;
+  if(!NOTIF_EMAIL)throw new Error("NOTIF_EMAIL manquant");
   const fichiers=Object.values(req.files||{}).flat();
   if(fichiers.some(f=>!fichierOk(f,ref)))return res.status(400).json({ok:false,erreur:"fichier refusé"});
-  const dir=dossierDir(ref),noms=[];
+  const principaux=[],pieces=[];
   for(const f of fichiers){
-   if(f.originalname.endsWith(".html")){                // fiche et lettre : conversion en PDF
-    const pdf=f.originalname.replace(/\.html$/,".pdf");
-    try{await htmlToPdf(f.buffer.toString("utf8"),path.join(dir,pdf));noms.push(pdf);continue}
-    catch(e){console.error("PDF :",e.message)}          // si la conversion échoue, on garde le HTML
-   }
-   fs.writeFileSync(path.join(dir,f.originalname),f.buffer);noms.push(f.originalname);
+   let fichier={filename:f.originalname,content:f.buffer};
+   if(f.originalname.endsWith(".html")){                                   // fiche et lettre -> PDF
+    try{fichier={filename:f.originalname.replace(/\.html$/,".pdf"),content:await htmlToPdfBuffer(f.buffer.toString("utf8"))}}
+    catch(e){console.error("PDF :",e.message)}                              // sinon on garde le HTML
+    principaux.push(fichier);
+   }else pieces.push(fichier);
   }
-  fs.writeFileSync(path.join(dir,ref+"_donnees.json"),JSON.stringify(d,null,1));
-  d._fichiers=noms;ajouter(d,"Dossier complet");
-  if(NOTIF_EMAIL&&tr)mail(NOTIF_EMAIL,"Nouveau dossier "+ref,`Dossier ${ref} reçu (${noms.length} fichiers) : ${d.prenom||""} ${d.nom||""} - ${(d.demande||{}).aide||""}`).catch(e=>console.error(e.message));
+  const donnees={filename:`${ref}_Donnees.json`,content:Buffer.from(JSON.stringify(d,null,1))};
+  const excel={filename:`${ref}_Registre.xlsx`,content:await excelUneDemande(d)};
+  const r=d.demande||{};
+  await envoyerParLots(NOTIF_EMAIL,`Nouveau dossier ${ref} : ${d.prenom||""} ${d.nom||""} - ${r.aide||""}`,
+   `Dossier ${ref}\n${d.prenom||""} ${d.nom||""}\n${r.pole||""} / ${r.aide||""}\nTél : ${d.tel||""}\nE-mail : ${d.email||""}\n\nPièces jointes : fiche, lettre, données (.json), ligne Excel et pièces justificatives.`,
+   [...principaux,donnees,excel,...pieces]);
+  if(d.email)mail(d.email,"Votre demande "+ref+" a bien été reçue",
+   `Bonjour ${d.prenom||""},\n\nNous avons bien reçu votre demande n° ${ref} (${r.aide||""}).\nVous trouverez ci-joint votre fiche de renseignements et votre lettre de demande.\n\nConservez ce numéro pour tout échange avec l'agence.\n\nAgence Mitantsoa\n12, rue Fernand Léger, 14123 IFS\n+33 7 45 26 19 86`,principaux)
+   .catch(e=>console.error("E-mail de validation :",e.message));
+  d._fichiers=[...principaux,donnees,excel,...pieces].map(f=>f.filename);
+  fs.writeFileSync(path.join(dossierDir(ref),ref+"_donnees.json"),JSON.stringify(d,null,1));   // petit fichier, pour la vérification
+  ajouter(d,"Dossier complet");
   res.json({ok:true});
- }catch(e){console.error(e.message);res.status(500).json({ok:false})}
+ }catch(e){console.error("Dossier :",e.message);res.status(502).json({ok:false})}
 });
+
 
 
 /* ---------- 4. Registre Excel (protégé par mot de passe) ---------- */
