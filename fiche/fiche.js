@@ -66,7 +66,7 @@ async function enregistrer(){
  const fd=new FormData(F),d={};for(const[k,v]of fd.entries())d[k]=v;
  d.besoins=fd.getAll("besoins");d.aides=fd.getAll("aides");d.demande=collecterDemande();
  const n=new Date(),p=x=>String(x).padStart(2,"0"),r=`DEM-${n.getFullYear()}${p(n.getMonth()+1)}${p(n.getDate())}-${gen().slice(0,4)}`;
- d.reference=r;d.signature={mode,valeur:mode=="type"?$("#sn").value.trim():cv.toDataURL("image/png"),canal:F.canal.value,date:n.toISOString()};
+ d.reference=r;d.jeton=sessionStorage.getItem("mit-jeton")||"";
  try{const l=JSON.parse(localStorage.getItem("mit-demandes")||"[]");l.push(d);localStorage.setItem("mit-demandes",JSON.stringify(l))}catch(e){}
  if(CFG.ENREG){try{await fetch(CFG.ENREG,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)})}catch(e){}}
  sessionStorage.setItem("mit-derniere",JSON.stringify({data:d,ref:r,prenom:d.prenom,quand:`${p(n.getDate())}/${p(n.getMonth()+1)}/${n.getFullYear()} à ${p(n.getHours())}h${p(n.getMinutes())}`}));
