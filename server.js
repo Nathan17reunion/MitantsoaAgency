@@ -44,6 +44,10 @@ const sms=async(num,content)=>{if(!BREVO_API_KEY)throw new Error("SMS non config
 
 /* ---------- 1. Code de confirmation (8 caractères) ---------- */
 const otps=new Map(),verified=new Map();
+const SECRET=process.env.TOKEN_SECRET||crypto.randomBytes(32).toString("hex");
+const signe=(k,exp)=>crypto.createHmac("sha256",SECRET).update(k+"|"+exp).digest("hex");
+const faireJeton=k=>{const exp=Date.now()+2*3600e3;return exp+"."+signe(k,exp)};
+const jetonOk=(k,j)=>{try{const [exp,sig]=String(j||"").split(".");return !!exp&&+exp>Date.now()&&crypto.timingSafeEqual(Buffer.from(sig||""),Buffer.from(signe(k,exp)))}catch(e){return false}};
 app.post("/envoi",lim(15),async(req,res)=>{
  const {action,canal,dest}=req.body||{};
  if(typeof dest!=="string"||dest.length<5||dest.length>120)return res.status(400).json({ok:false});
@@ -62,12 +66,12 @@ app.post("/envoi",lim(15),async(req,res)=>{
   const o=otps.get(k),c=String(req.body.code||"").toUpperCase();
   if(!o||Date.now()>o.exp||++o.tries>5){otps.delete(k);return res.json({ok:false})}
   if(sha(c)!==o.hash)return res.json({ok:false});
-  otps.delete(k);verified.set(k,Date.now());return res.json(MODE_TEST==="true"?{ok:true,code}:{ok:true});
+  otps.delete(k);verified.set(k,Date.now());return res.json({ok:true,jeton:faireJeton(k)});
  }
  res.status(400).json({ok:false});
 });
 // une demande n'est acceptée que si le téléphone ou l'e-mail a été vérifié depuis moins de 2 h
-const isVerified=d=>[d&&d.tel,d&&d.email].filter(Boolean).some(x=>{const t=verified.get(norm(x));return t&&Date.now()-t<2*3600e3});
+const isVerified=d=>{if(!d||!d.email)return false;const k=norm(d.email),t=verified.get(k);return (!!t&&Date.now()-t<2*3600e3)||jetonOk(k,d.jeton)};
 
 /* --- Conversion HTML -> PDF (nécessite : npm install puppeteer) --- */
 let puppeteer=null;try{puppeteer=require("puppeteer")}catch(e){console.log("puppeteer absent : fiche et lettre resteront en HTML")}
