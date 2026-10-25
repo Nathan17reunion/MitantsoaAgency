@@ -11,6 +11,7 @@ fs.mkdirSync(path.join(DATA,"dossiers"),{recursive:true});
 const app=express();app.set("trust proxy",1);app.use(helmet());
 app.use(cors({origin:ALLOWED_ORIGIN?ALLOWED_ORIGIN.split(",").map(s=>s.trim()):false}));
 app.use((req,res,next)=>{res.on("finish",()=>console.log(new Date().toLocaleTimeString(),req.method,req.url,res.statusCode));next()});
+app.use(express.static(path.join(__dirname,"fiche")));
 app.use(express.json({limit:"2mb"}));
 const lim=n=>rateLimit({windowMs:15*60*1000,max:n,standardHeaders:true,legacyHeaders:false});
 
