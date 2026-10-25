@@ -8,7 +8,7 @@ const {PORT=3000,HOST="127.0.0.1",ALLOWED_ORIGIN,MODE_TEST="true",ADMIN_USER,ADM
 
 const DATA=path.join(__dirname,"data"),REG=path.join(DATA,"registre.jsonl");
 fs.mkdirSync(path.join(DATA,"dossiers"),{recursive:true});
-const app=express();app.set("trust proxy",1);app.use(helmet());
+const app=express();app.set("trust proxy",1);
 app.use(cors({origin:ALLOWED_ORIGIN?ALLOWED_ORIGIN.split(",").map(s=>s.trim()):false}));
 app.use((req,res,next)=>{res.on("finish",()=>console.log(new Date().toLocaleTimeString(),req.method,req.url,res.statusCode));next()});
 app.use(express.static(path.join(__dirname,"fiche")));
@@ -230,7 +230,6 @@ app.listen(PORT,HOST,()=>console.log(`Serveur Mitantsoa sur http://${HOST}:${POR
 
 app.use(express.static("D:/MitantsoaAgency/fiche-mitantsoa/fiche-mitantsoa"));
 
-const app=express();app.set("trust proxy",1);
 app.use(helmet({
  contentSecurityPolicy:{
   directives:{
