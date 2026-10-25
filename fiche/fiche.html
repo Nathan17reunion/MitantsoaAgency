@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fiche de renseignements – Agence Mitantsoa</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=2">
+
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.12.5/build/css/intlTelInput.css"
+>
+
+<style>
+  /* ---------- Champ adresse et suggestions ---------- */
+
+  .form-field {
+    position: relative;
+  }
+
+  .adresse-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .adresse-wrapper > input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .adresse-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+
+    z-index: 1000;
+    box-sizing: border-box;
+
+    max-height: 220px;
+    overflow-y: auto;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+
+    background: var(--color-cream, #fff);
+    border: 1px solid var(--color-border, #d9dedb);
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 8px 16px rgba(21, 46, 38, 0.12);
+  }
+
+  .adresse-suggestions[hidden] {
+    display: none;
+  }
+
+  .adresse-suggestions li {
+    margin: 0;
+    padding: 0;
+  }
+
+  .adresse-suggestions button {
+    display: block;
+    width: 100%;
+
+    margin: 0;
+    padding: 0.7rem 0.8rem;
+
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+
+    background: transparent;
+    color: var(--color-text, #213b31);
+
+    font: inherit;
+    font-size: 0.92rem;
+    line-height: 1.4;
+    text-align: left;
+    white-space: normal;
+
+    cursor: pointer;
+  }
+
+  .adresse-suggestions button:hover,
+  .adresse-suggestions button:focus-visible {
+    background: var(--color-bg-alt, #eef3ef);
+  }
+
+  .adresse-suggestions button:focus-visible {
+    outline: 2px solid var(--color-text, #213b31);
+    outline-offset: -2px;
+  }
+
+  .form-help {
+    display: block;
+    margin-top: 0.3rem;
+
+    font-size: 0.85rem;
+    line-height: 1.4;
+
+    color: var(--color-text-soft, #64736b);
+  }
+
+  /* ---------- Téléphone international ---------- */
+
+  .iti {
+    width: 100%;
+  }
+
+  .iti input[type="tel"] {
+  width: 100%;
+  box-sizing: border-box;
+  }
+
+  /* ---------- Liens retraite en pied de page ---------- */
+
+  .liens-retraite {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem 0.9rem;
+
+    max-width: 1100px;
+    margin: 1.5rem auto 0;
+    padding: 1rem;
+
+    border-top: 1px solid var(--color-border, #d9dedb);
+
+    color: var(--color-text-soft, #64736b);
+    font-size: 0.8rem;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .liens-retraite-titre {
+    font-weight: 600;
+  }
+
+  .liens-retraite a {
+    color: inherit;
+    white-space: nowrap;
+
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .liens-retraite a:hover {
+    color: var(--color-text, #213b31);
+  }
+
+  .liens-retraite a:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+  border-radius: 2px;
+  }
+
+  /* ---------- Nom et prénom ---------- */
+
+  .aidant-identite {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+  }
+
+  .aidant-identite > label {
+   min-width: 0;
+  }
+
+  .aidant-identite input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+</style>
+
+</head>
+<body>
+<header class="top">
+<svg viewBox="0 0 200 200" fill="none" stroke="#FCFAF4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="100" cy="100" r="90" stroke-width="8"/><path d="M52 148L52 66L100 116L148 66L148 148" stroke-width="15"/><path d="M100 52V158M100 62C132 66 132 90 100 94C68 98 68 122 100 126C120 129 126 143 108 154" stroke="#E7C393" stroke-width="6"/><path d="M100 18C100 18 114 34 114 43A14 14 0 0 1 86 43C86 34 100 18 100 18Z" fill="#E7C393" stroke="none"/></svg>
+<div><b>AGENCE MITANTSOA</b><small>Services à la personne · Aide à domicile · Conseil voyage La Réunion &amp; Madagascar</small></div>
+</header>
+<main class="wrap">
+<h1>Fiche de renseignements<br>Demande d’aide à la personne</h1>
+<p class="lead">Quelques minutes suffisent. Les champs marqués <em style="color:#B9781E;font-style:normal">*</em> sont obligatoires. Vos informations sont confidentielles.</p>
+<div class="steps" id="steps"></div>
+<p id="lbl"></p>
+
+<div class="card" id="formcard">
+<form id="f" novalidate autocomplete="on">
+
+<section class="step" data-t="Identité du demandeur">
+<h2>1. Identité du demandeur (bénéficiaire)</h2><p class="sub">Personne qui bénéficiera de l’aide.</p>
+<div class="g">
+<label class="f">
+  Nom de naissance <em>*</em>
+  <input
+    type="text"
+    name="nom"
+    required
+    autocomplete="family-name"
+  >
+</label>
+
+<label class="f">
+  Nom marital
+  <input
+    type="text"
+    name="nom_marital"
+  >
+</label>
+
+<label class="f">
+  Prénom(s) <em>*</em>
+  <input
+    type="text"
+    name="prenom"
+    required
+    autocomplete="given-name"
+  >
+</label>
+<div><label class="f">Date de naissance <em>*</em><input type="date" name="naissance" id="dn" required></label><div class="age" id="age"></div></div>
+<div>
+  <span class="f">Sexe</span>
+
+  <div
+    class="chips"
+    data-n="sexe"
+    data-v="Homme|Femme|Je préfère ne pas répondre"
+  ></div>
+</div>
+
+<div class="f">
+  <label for="tel">
+    Téléphone <em>*</em>
+  </label>
+
+  <input
+    type="tel"
+    id="tel"
+    name="tel"
+    required
+    autocomplete="tel"
+    aria-describedby="tel-aide"
+  >
+
+  <small id="tel-aide" class="form-help">
+    Choisissez votre pays ou territoire, puis saisissez votre numéro.
+  </small>
+</div>
+
+<div class="f full form-field">
+  <label for="adresse">
+    Adresse de l’intervention <em aria-hidden="true">*</em>
+  </label>
+
+  <div class="adresse-wrapper">
+    <input
+      type="text"
+      id="adresse"
+      name="adresse"
+      placeholder="Commencez à saisir votre adresse…"
+      autocomplete="off"
+      aria-describedby="adresse-aide"
+      required
+    >
+
+    <ul
+      id="adresse-suggestions"
+      class="adresse-suggestions"
+      aria-label="Adresses proposées"
+      hidden
+    ></ul>
+  </div>
+
+  <input
+    type="hidden"
+    id="adresse-validee"
+    name="adresse_validee"
+    value=""
+  >
+
+  <small id="adresse-aide" class="form-help">
+    Si votre adresse apparaît dans la liste, sélectionnez-la.
+    Sinon, vous pouvez la saisir manuellement.
+  </small>
+</div>
+
+
+<label class="f">
+  E-mail <em>*</em>
+
+  <input
+    type="email"
+    id="email"
+    name="email"
+    required
+    autocomplete="email"
+    inputmode="email"
+    placeholder="prenom.nom@gmail.com"
+    aria-describedby="email-aide"
+  >
+</label>
+
+<label class="f">
+  N° de Sécurité sociale
+
+  <input
+    type="text"
+    name="nss"
+    id="nss"
+    maxlength="21"
+    autocomplete="off"
+    spellcheck="false"
+    autocapitalize="characters"
+    placeholder="X XX XX XX XXX XXX XX"
+    aria-describedby="nss-aide"
+  >
+
+  <small id="nss-aide" class="form-help">
+    Si vous renseignez ce champ, saisissez le numéro complet
+    avec sa clé : 15 caractères, hors espaces.
+    Les lettres A et B sont acceptées pour la Corse.
+  </small>
+</label>
+
+<div class="full"><span class="f">Caisse de retraite principale</span><div class="chips" data-n="caisse" data-v="Assurance Retraite / CARSAT|MSA|Agirc-Arrco|CNRACL|SRE|IRCANTEC|SSI|CNAVPL|Régimes spéciaux|Autre"></div><input type="text" name="caisse_autre" data-autre="caisse" placeholder="Précisez la caisse" hidden></div>
+</div>
+<nav class="liens-retraite" aria-label="Liens utiles pour la retraite">
+  <span class="liens-retraite-titre">Liens utiles retraite :</span>
+
+  <a
+    href="https://www.lassuranceretraite.fr/portail-info/home.html"
+    target="_blank"
+    rel="noopener noreferrer"
+  >Assurance Retraite / CARSAT</a>
+
+  <a
+    href="https://www.msa.fr/lfp/accueil"
+    target="_blank"
+    rel="noopener noreferrer"
+  >MSA</a>
+
+  <a
+    href="https://www.agirc-arrco.fr/"
+    target="_blank"
+    rel="noopener noreferrer"
+  >Agirc-Arrco</a>
+
+  <a
+    href="https://www.cnracl.retraites.fr/"
+    target="_blank"
+    rel="noopener noreferrer"
+  >CNRACL</a>
+
+  <a
+    href="https://retraitesdeletat.gouv.fr/"
+    target="_blank"
+    rel="noopener noreferrer"
+  >SRE</a>
+
+  <a
+    href="https://www.ircantec.retraites.fr/"
+    target="_blank"
+    rel="noopener noreferrer"
+  >Ircantec</a>
+
+  <a
+    href="https://secu-independants.fr/accueil"
+    target="_blank"
+    rel="noopener noreferrer"
+  >Indépendants / CPSTI</a>
+
+  <a
+    href="https://www.cnavpl.fr/"
+    target="_blank"
+    rel="noopener noreferrer"
+  >CNAVPL</a>
+
+  <a
+    href="https://www.retraite.com/retraite-par-metier/retraite-fonctionnaire-publique/retraite-et-regimes-speciaux-tout-ce-qu-il-faut-savoir/"
+    target="_blank"
+    rel="noopener noreferrer"
+  >Régimes spéciaux — guide</a>
+</nav>
+</section>
+
+<section class="step" data-t="Personne à contacter">
+<h2>2. Personne à contacter / Aidant principal</h2><p class="sub">À renseigner si elle est différente du demandeur.</p>
+<label class="ck"><input type="checkbox" id="noaid"> Aucune personne différente du demandeur à contacter</label>
+<div class="g" id="aid">
+<div class="full aidant-identite">
+  <label class="f">
+    Nom
+    <input
+      type="text"
+      id="aidant-nom"
+      name="aidant_nom"
+      autocomplete="section-aidant family-name"
+      placeholder="DUPONT"
+    >
+  </label>
+
+  <label class="f">
+    Prénom
+    <input
+      type="text"
+      id="aidant-prenom"
+      name="aidant_prenom"
+      autocomplete="section-aidant given-name"
+      placeholder="marie"
+    >
+  </label>
+</div>
+<label class="f">Téléphone<input type="tel" name="aidant_tel"></label>
+<div class="full"><span class="f">Lien avec le demandeur</span><div class="chips" data-n="lien" data-v="Enfant|Conjoint|Autre"></div><input type="text" name="lien_autre" data-autre="lien" placeholder="Précisez le lien" hidden></div>
+<div class="f full form-field">
+  <label for="adresse">
+    Adresse de l’intervention <em aria-hidden="true">*</em>
+  </label>
+
+  <div class="adresse-wrapper">
+    <input
+      type="text"
+      id="adresse"
+      name="adresse"
+      placeholder="Commencez à saisir votre adresse…"
+      autocomplete="off"
+      aria-describedby="adresse-aide"
+      required
+    >
+
+    <ul
+      id="adresse-suggestions"
+      class="adresse-suggestions"
+      aria-label="Adresses proposées"
+      hidden
+    ></ul>
+  </div>
+
+  <input
+    type="hidden"
+    id="adresse-validee"
+    name="adresse_validee"
+    value=""
+  >
+
+  <small id="adresse-aide" class="form-help">
+    Si votre adresse apparaît dans la liste, sélectionnez-la.
+    Sinon, vous pouvez la saisir manuellement.
+  </small>
+</div>
+</div>
+</section>
+
+<section class="step" data-t="Logement et environnement">
+<h2>3. Situation du logement et environnement</h2><p class="sub">Pour adapter l’intervention à votre domicile.</p>
+<div class="g">
+<div><span class="f">Type de logement <em>*</em></span><div class="chips" data-n="logement" data-v="Maison|Appartement" data-r></div></div>
+<div><span class="f">Statut <em>*</em></span><div class="chips" data-n="statut" data-v="Propriétaire|Locataire|Hébergé" data-r></div></div>
+<div><span class="f">Étage / Accès</span><div class="chips" data-n="acces" data-v="Rez-de-chaussée|Étage"></div></div>
+<div id="asc" hidden><span class="f">Avec ascenseur</span><div class="chips" data-n="ascenseur" data-v="Oui|Non"></div></div>
+<div class="full"><span class="f">Environnement / Commerces</span><div class="chips" data-n="commerces" data-v="Commerces à moins de 300 m|Éloignés (plus de 1 km)"></div></div>
+<div class="full"><span class="f">Mode de vie <em>*</em></span><div class="chips" data-n="vie" data-v="Vit seul(e)|Vit en couple (conjoint autonome)|Vit en couple (conjoint dépendant)|Vit chez un tiers" data-r></div></div>
+</div>
+</section>
+
+<section class="step" data-t="Besoins et autonomie">
+<h2>4. Évaluation des besoins et pertes d’autonomie</h2><p class="sub">Cochez toutes les aides dont vous avez besoin.</p>
+<label class="f">Motif principal de la demande <em>*</em><textarea name="motif" rows="3" required></textarea></label>
+<p class="sec">Aide pour les actes essentiels</p>
+<div class="chips sq" data-n="besoins" data-t="checkbox" data-v="Lever / Coucher / Transferts|Toilette / Hygiène corporelle|Habillage / Déshabillage|Alimentation (préparation et aide aux repas)|Entretien du logement (ménage, vaisselle, linge)|Courses / Approvisionnement|Déplacements extérieurs / Rendez-vous médicaux|Démarches administratives"></div>
+<label class="f" style="margin-top:14px">Autre besoin (précisez)<input type="text" name="besoin_autre"></label>
+</section>
+
+<section class="step" data-t="Aides déjà en place">
+<h2>5. Aides déjà en place</h2><p class="sub">Les intervenants qui vous accompagnent actuellement.</p>
+<div class="chips sq" data-n="aides" data-t="checkbox" data-v="Service d’Aide et d’Accompagnement à Domicile (SAAD)|Auxiliaire de vie en emploi direct (gré à gré)|Portage de repas|Téléassistance|Infirmier(s) / Kinésithérapeute|Aucune aide pour le moment"></div>
+<label class="f" style="margin-top:16px;max-width:280px">Volume horaire actuel (heures par semaine)<input type="number" name="heures" min="0" max="168" step="0.5"></label>
+</section>
+
+<section class="step" data-t="Signature et validation">
+<h2>6. Signature et validation</h2><p class="sub">Signez, puis confirmez avec le code reçu.</p>
+<label class="ck"><input type="checkbox" id="ok"> J’atteste sur l’honneur l’exactitude des informations de cette fiche et j’autorise l’Agence Mitantsoa à les utiliser pour étudier ma demande (RGPD : accès, rectification et suppression sur simple demande à jrayan.mitantsoanyhaja@gmail.com).</label>
+<div class="tabs"><button type="button" class="tab on" data-m="type">Taper mon nom</button><button type="button" class="tab" data-m="draw">Dessiner ma signature</button></div>
+<div id="pt"><input type="text" id="sn" placeholder="Prénom et Nom" aria-label="Prénom et Nom"><div class="sp" id="sp"></div></div>
+<div id="pd" hidden><canvas id="cv"></canvas><button type="button" class="lnk" id="clr">Effacer</button></div>
+<p class="sec">Recevoir le code de confirmation (8 caractères)</p>
+<div class="chips"><label class="chip"><input type="radio" name="canal" value="sms" checked><span>Par SMS</span></label><label class="chip"><input type="radio" name="canal" value="email"><span>Par e-mail</span></label></div>
+<p style="margin:14px 0 0"><button type="button" class="btn bp" id="send">Envoyer le code</button></p>
+<div class="test" id="test" hidden>MODE TEST : aucun serveur d’envoi configuré, le code s’affiche ici : <b></b></div>
+<div id="codebox" hidden style="margin-top:16px"><label class="f">Code reçu<input type="text" id="code" maxlength="8" autocomplete="one-time-code" placeholder="••••••••"></label><p style="margin:14px 0 0"><button type="button" class="btn bp" id="val">Valider et enregistrer ma demande</button></p></div>
+<p id="msg" role="status"></p>
+</section>
+
+<div class="nav"><button type="button" class="btn bs" id="prev"></button><button type="button" class="btn bp" id="next">Suivant →</button></div>
+</form>
+</div>
+<p class="foot">Agence Mitantsoa · 12, rue Fernand Léger, 14123 IFS · +33 7 45 26 19 86</p>
+</main>
+
+<script src="config.js?v=2"></script>
+<script src="poles.js?v=3"></script>
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.12.5/build/js/intlTelInput.min.js"></script>
+<script src="lettre.js"></script> 
+<script src="fiche.js?v=3"></script>
+</body>
+</html>
