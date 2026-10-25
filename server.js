@@ -162,7 +162,7 @@ app.get("/admin/verifier/:ref",lim(60),auth,(req,res)=>{
  const dir=path.join(DATA,"dossiers",ref),ok=fs.existsSync(dir);let d={};
  if(ok)try{d=JSON.parse(fs.readFileSync(path.join(dir,ref+"_donnees.json"),"utf8"))}catch(e){}
  const r=d.demande||{};
- res.send(`<!doctype html><meta charset="utf-8"><title>Vérification ${E(ref)}</title><body style="font-family:Arial,sans-serif;max-width:560px;margin:30px auto;line-height:1.6"><h2 style="color:${ok?"#24463B":"#B3382C"}">${ok?"✔ Demande trouvée":"✖ Numéro introuvable"} : ${E(ref)}</h2>${ok?`<p><b>${E(d.prenom)} ${E(d.nom)}</b><br>${E(r.aide)} (${E(r.pole)})<br>${E(d.tel)} · ${E(d.email)}</p><p>Fichiers enregistrés :</p><ul>${fs.readdirSync(dir).map(f=>"<li>"+E(f)+"</li>").join("")}</ul>`:"<p>Aucun dossier enregistré avec ce numéro.</p>"}</body>`);
+ res.send(`<!doctype html><meta charset="utf-8"><title>Vérification ${E(ref)}</title><body style="font-family:Arial,sans-serif;max-width:560px;margin:30px auto;line-height:1.6"><h2 style="color:${ok?"#24463B":"#B3382C"}">${ok?"✔ Demande trouvée":"✖ Numéro introuvable"} : ${E(ref)}</h2>${ok?`<p><b>${E(d.prenom)} ${E(d.nom)}</b><br>${E(r.aide)} (${E(r.pole)})<br>${E(d.tel)} · ${E(d.email)}</p><p>Fichiers enregistrés :</p><ul>${fs.readdirSync(dir).map(f=>"<li><a href=\"/admin/fichier/"+ref+"/"+encodeURIComponent(f)+"\">"+E(f)+"</a></li>").join("")}</ul>`:"<p>Aucun dossier enregistré avec ce numéro.</p>"}</body>`);
 });
 
 app.get("/",(q,r)=>r.send("Serveur Agence Mitantsoa : en ligne"));
@@ -179,3 +179,11 @@ app.use(helmet({
   }
  }
 }));
+
+app.get("/admin/fichier/:ref/:nom",lim(60),auth,(req,res)=>{
+ const ref=String(req.params.ref).toUpperCase(),nom=path.basename(String(req.params.nom));
+ if(!REF.test(ref))return res.status(400).send("Numéro invalide");
+ const f=path.join(DATA,"dossiers",ref,nom);
+ if(!fs.existsSync(f))return res.status(404).send("Fichier introuvable");
+ res.download(f);
+});
