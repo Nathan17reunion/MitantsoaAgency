@@ -87,7 +87,7 @@ const ajouter=(d,statut)=>{const r=d.demande||{},l=r.lt||{};
   console.log("Excel ouvert : copie à jour enregistrée dans",copie);
  }
 }
-
+}
 /* ---------- 3. Dossier complet (fiche, lettre, pièces) ---------- */
 const up=multer({storage:multer.memoryStorage(),limits:{fileSize:10*1048576,files:25}});
 const NOM=/^(DEM-\d{8}-[A-Z0-9]{4})_\d{2}(?:-\d{2})?_[A-Za-z0-9-]{1,40}\.(pdf|png|jpg|html)$/;
